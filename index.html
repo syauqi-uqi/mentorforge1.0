@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pemilihan Ketua Umum Asrama</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        :root{
+            --primary: #4f46e5; /* indigo-600 */
+            --primary-dark: #4338ca; /* indigo-700 */
+            --accent: #7c3aed; /* purple-600 */
+            --muted: #6b7280;
+            --bg: #f8fafc;
+            --card-shadow: 0 10px 25px rgba(2,6,23,0.06);
+        }
+
+        html,body{height:100%;}
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); }
+
+        /* Header background */
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+
+        /* Reusable card shadow */
+        .card-shadow { box-shadow: var(--card-shadow); }
+
+        /* Pulse used for active voting indicator */
+        .pulse-animation { animation: pulse 1.6s infinite; }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.02); opacity: 0.85; }
+        }
+
+        /* Global layout tweaks */
+        .container{ max-width:1100px; margin:0 auto; }
+        .nav-btn{ transition: background-color .15s ease, transform .08s ease; }
+        .nav-btn:active{ transform: translateY(1px); }
+
+        /* Buttons */
+        .btn-primary{ background: linear-gradient(90deg,var(--primary),var(--accent)); color:white; }
+
+        /* Forms */
+        input[type="text"], input[type="number"], input[type="datetime-local"], textarea, select{
+            border-radius: .5rem; border:1px solid #e5e7eb; background:white; outline:none;
+        }
+
+        /* Make candidate images and placeholders consistent */
+        img.responsive{ width:100%; height:auto; object-fit:cover; border-radius:.5rem; }
+
+        /* Responsive fine-tuning */
+        @media (max-width: 640px){
+            h1{ font-size:1.25rem; }
+            .container{ padding:0 1rem; }
+        }
+
+        /* Small utility */
+        .muted { color: var(--muted); }
+
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white py-6 shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="text-center">
+                <h1 class="text-3xl md:text-4xl font-bold mb-2">Sistem Voting Pemilihan Ketua Umum Asrama Tahun 2025</h1>
+                <p class="text-lg opacity-90">Asrama Mahasiswa Bumi Siliwangi UPI</p>
+                <p class="text-lg opacity-90">Kabinet Adhyayana</p>
+                <h6 class="text-gray-400">Developed by Syauqi</h6>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md sticky top-0 z-40">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-wrap justify-between items-center py-4">
+                <div class="flex flex-wrap justify-center space-x-2 md:space-x-6">
+                    <button onclick="showSection('voting')" class="nav-btn bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors mb-2 md:mb-0">
+                        🗳️ Voting
+                    </button>
+                    <button id="admin-candidates-btn" onclick="showSection('candidates')" class="nav-btn bg-gray-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors mb-2 md:mb-0 hidden">
+                        👥 Kelola Calon
+                    </button>
+                    <button id="admin-classes-btn" onclick="showSection('classes')" class="nav-btn bg-gray-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors mb-2 md:mb-0 hidden">
+                        📋 Kelola Kelas
+                    </button>
+                    <button id="admin-timer-btn" onclick="showSection('timer')" class="nav-btn bg-gray-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors mb-2 md:mb-0 hidden">
+                        ⏰ Waktu Voting
+                    </button>
+                    <button id="admin-results-btn" onclick="showSection('results')" class="nav-btn bg-gray-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors mb-2 md:mb-0 hidden">
+                        📊 Hasil
+                    </button>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="admin-status" class="text-sm text-gray-600 hidden">
+                        Admin: <span class="font-medium text-blue-600">Aktif</span>
+                    </div>
+                    <button id="admin-login-btn" onclick="showAdminLogin()" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors text-sm">
+                        🔐 Admin
+                    </button>
+                    <button id="admin-logout-btn" onclick="logoutAdmin()" class="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors text-sm hidden">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Admin Login Modal -->
+    <div id="admin-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Login Admin</h3>
+            <div class="space-y-4">
+                <input type="text" id="admin-username" placeholder="Username Admin" 
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                <input type="password" id="admin-password" placeholder="Password Admin" 
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                <div class="flex space-x-3">
+                    <button onclick="loginAdmin()" 
+                            class="flex-1 bg-purple-600 text-white py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors">
+                        Login
+                    </button>
+                    <button onclick="hideAdminLogin()" 
+                            class="flex-1 bg-gray-600 text-white py-3 rounded-lg font-medium hover:bg-gray-700 transition-colors">
+                        Batal
+                    </button>
+                </div>
+            </div>
+            <div class="mt-4 text-xs text-gray-500 text-center">
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Voting Section -->
+        <div id="voting-section" class="section">
+            <div class="bg-white rounded-xl card-shadow p-6 mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">PEMILIHAN KETUA MENTOR ASRAMA TAHUN 2025</h2>
+                
+                <!-- Timer Display -->
+                <div class="bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg p-4 mb-6 text-center">
+                    <div class="text-sm font-medium mb-2">Waktu Tersisa:</div>
+                    <div id="countdown-display" class="text-2xl md:text-3xl font-bold">
+                        Voting Belum Dimulai
+                    </div>
+                </div>
+
+                <!-- Voter Login -->
+                <div id="voter-login" class="mb-6">
+                    <div class="max-w-md mx-auto">
+                        <h3 class="text-lg font-semibold mb-4 text-center">Masuk Sebagai Pemilih</h3>
+                        <div class="space-y-4">
+                            <select id="voter-class" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">Pilih Angkatan Anda</option>
+                            </select>
+                            <input type="text" id="voter-name" placeholder="Masukkan Nama Lengkap Anda" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <button onclick="loginVoter()" 
+                                    class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                                Masuk untuk Voting
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Voting Interface -->
+                <div id="voting-interface" class="hidden">
+                    <div class="text-center mb-6">
+                        <p class="text-lg">Selamat datang, <span id="voter-name" class="font-semibold text-blue-600"></span></p>
+                        <p class="text-gray-600">Pilih Calon Ketua Umum Asrama Terbaik Anda</p>
+                    </div>
+                    
+                    <div id="candidates-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Candidates will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Already Voted Message -->
+                <div id="already-voted" class="hidden text-center">
+                    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
+                        <p class="font-semibold">Terima kasih telah memberikan suara!</p>
+                        <p>Anda telah memilih: <span id="voted-candidate" class="font-medium"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Candidates Management Section -->
+        <div id="candidates-section" class="section hidden">
+            <div class="bg-white rounded-xl card-shadow p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Kelola Calon Ketua Umum</h2>
+                
+                <!-- Add Candidate Form -->
+                <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                    <h3 class="text-lg font-semibold mb-4">Tambah Calon Baru</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="text" id="candidate-name" placeholder="Nama Lengkap" 
+                               class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <input type="text" id="candidate-class" placeholder="Program Studi/Fakultas (contoh: Prodi Sastra Mesin/FMESIN)" 
+                               class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Foto Calon</label>
+                            <input type="file" id="candidate-photo" accept="image/*" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <p class="text-xs text-gray-500 mt-1">Format: JPG, PNG, GIF (Maks. 2MB)</p>
+                        </div>
+                        <input type="text" id="candidate-vision" placeholder="Visi Singkat" 
+                               class="md:col-span-2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <textarea id="candidate-mission" placeholder="Misi (pisahkan dengan enter untuk poin berbeda)" 
+                                  class="md:col-span-2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 h-24"></textarea>
+                        <textarea id="candidate-programs" placeholder="Program Kerja (pisahkan dengan enter untuk poin berbeda)" 
+                                  class="md:col-span-2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 h-32"></textarea>
+                    </div>
+                    <button onclick="addCandidate()" 
+                            class="mt-4 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors">
+                        Tambah Calon
+                    </button>
+                </div>
+
+                <!-- Candidates List -->
+                <div id="candidates-management-list">
+                    <!-- Candidates management will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Classes Management Section -->
+        <div id="classes-section" class="section hidden">
+            <div class="bg-white rounded-xl card-shadow p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Kelola Data Angkatan yang memilih</h2>
+                
+                <!-- Add Class Form -->
+                <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                    <h3 class="text-lg font-semibold mb-4">Tambah Angkatan Baru</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="text" id="class-name" placeholder="Nama Angkatan (contoh: Angkatan 2023)" 
+                               class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <input type="number" id="class-count" placeholder="Jumlah Penghuni" min="1" max="100"
+                               class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <button onclick="addClass()" 
+                            class="mt-4 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors">
+                        Tambah Angkatan
+                    </button>
+                </div>
+
+                <!-- Classes List -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="classes-list">
+                    <!-- Classes will be loaded here -->
+                </div>
+
+                <!-- Summary -->
+                <div class="mt-8 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4 text-center">Ringkasan Data</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                        <div class="bg-white rounded-lg p-4">
+                            <div class="text-2xl font-bold text-blue-600" id="total-classes">0</div>
+                            <div class="text-gray-600">Total Angkatan</div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4">
+                            <div class="text-2xl font-bold text-green-600" id="total-students">0</div>
+                            <div class="text-gray-600">Total Penghuni yang Memiliki Hak Suara</div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4">
+                            <div class="text-2xl font-bold text-purple-600" id="voted-students">0</div>
+                            <div class="text-gray-600">Sudah Voting</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timer Management Section -->
+        <div id="timer-section" class="section hidden">
+            <div class="bg-white rounded-xl card-shadow p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Pengaturan Waktu Voting</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Set Timer -->
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold mb-4">Atur Waktu Voting</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal & Waktu Mulai</label>
+                                <input type="datetime-local" id="start-time" 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal & Waktu Selesai</label>
+                                <input type="datetime-local" id="end-time" 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <button onclick="setVotingTime()" 
+                                    class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                                Atur Waktu Voting
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Current Timer Status -->
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold mb-4">Status Waktu Voting</h3>
+                        <div id="timer-status" class="space-y-3">
+                            <div class="text-sm text-gray-600">Status: <span id="voting-status" class="font-medium">Belum Diatur</span></div>
+                            <div class="text-sm text-gray-600">Mulai: <span id="start-display">-</span></div>
+                            <div class="text-sm text-gray-600">Selesai: <span id="end-display">-</span></div>
+                            <div class="text-lg font-semibold text-blue-600" id="current-countdown">-</div>
+                        </div>
+                        <div class="mt-4 space-y-2">
+                            <button onclick="startVotingNow()" 
+                                    class="w-full bg-green-600 text-white py-2 rounded-lg font-medium hover:bg-green-700 transition-colors">
+                                Mulai Voting Sekarang
+                            </button>
+                            <button onclick="stopVoting()" 
+                                    class="w-full bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition-colors">
+                                Hentikan Voting
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-section" class="section hidden">
+            <div class="bg-white rounded-xl card-shadow p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Hasil Pemilihan</h2>
+                
+                <!-- Results Summary -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-blue-50 rounded-lg p-6 text-center">
+                        <div class="text-3xl font-bold text-blue-600" id="total-votes">0</div>
+                        <div class="text-gray-600">Total Suara</div>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-6 text-center">
+                        <div class="text-3xl font-bold text-green-600" id="total-voters">0</div>
+                        <div class="text-gray-600">Total Pemilih</div>
+                    </div>
+                    <div class="bg-purple-50 rounded-lg p-6 text-center">
+                        <div class="text-3xl font-bold text-purple-600" id="participation-rate">0%</div>
+                        <div class="text-gray-600">Partisipasi</div>
+                    </div>
+                </div>
+
+                <!-- Results Chart -->
+                <div id="results-chart" class="space-y-4">
+                    <!-- Results will be displayed here -->
+                </div>
+
+                <!-- Export Results -->
+                <div class="mt-8 text-center">
+                    <button onclick="exportResults()" 
+                            class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors">
+                        📊 Export Hasil ke CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Data Storage
+        let candidates = JSON.parse(localStorage.getItem('ketua_umum_candidates') || '[]');
+        let classes = JSON.parse(localStorage.getItem('ketua_umum_classes') || '[]');
+        let votes = JSON.parse(localStorage.getItem('ketua_umum_votes') || '{}');
+        let votingTime = JSON.parse(localStorage.getItem('ketua_umum_voting_time') || '{}');
+        let currentVoter = null;
+        let isAdminLoggedIn = localStorage.getItem('ketua_umum_admin_logged_in') === 'true';
+
+        // Admin credentials (in real app, this should be more secure)
+        const adminCredentials = {
+            username: 'adminsyauqi',
+            password: 'mentorforge2025'
+        };
+
+        // Initialize with sample data if empty
+        if (candidates.length === 0) {
+            candidates = [
+                {
+                    id: 1,
+                    name: "Ahmad Lorem Ipsum",
+                    class: "Prodi Sastra Mesin - FPSS",
+                    photo: null,
+                    vision: "Mewujudkan lorem ipsum dolor sit amet",
+                    mission: ["Meningkatkan kegiatan lorem", "Mengadakan program pelatihan soft skills", "Memperkuat kerjasama antar warga"],
+                    programs: ["Turnamen lorem ipsum", "Pelatihan public speaking", "Program mentoring junior-senior", "Lomba lorem ipsum"]
+                },
+                {
+                    id: 2,
+                    name: "Siti Lorem Ipsum",
+                    class: "Prodi Kimia Syariah - FPMIS",
+                    photo: null,
+                    vision: "Membangun Asrama yang peduli lorem ipsum",
+                    mission: ["Program asrama hijau", "Digitalisasi kegiatan kajian", "Workshop lorem ipsum"],
+                    programs: ["Bank sampah asrama anjay", "Aplikasi monitoring kajian asrama", "Pelatihan lorem ipsum", "Joget gemoy tiap minggu pagi"]
+                }
+            ];
+            localStorage.setItem('ketua_umum_candidates', JSON.stringify(candidates));
+        }
+
+        if (classes.length === 0) {
+            classes = [
+                { name: "Angkatan 2020", studentCount: 10, votedCount: 0 },
+            ];
+            localStorage.setItem('ketua_umum_classes', JSON.stringify(classes));
+        }
+
+        // Admin Functions
+        function showAdminLogin() {
+            document.getElementById('admin-modal').classList.remove('hidden');
+        }
+
+        function hideAdminLogin() {
+            document.getElementById('admin-modal').classList.add('hidden');
+            document.getElementById('admin-username').value = '';
+            document.getElementById('admin-password').value = '';
+        }
+
+        function loginAdmin() {
+            const username = document.getElementById('admin-username').value.trim();
+            const password = document.getElementById('admin-password').value.trim();
+            
+            if (username === adminCredentials.username && password === adminCredentials.password) {
+                isAdminLoggedIn = true;
+                localStorage.setItem('ketua_umum_admin_logged_in', 'true');
+                updateAdminUI();
+                hideAdminLogin();
+                alert('Login admin berhasil!');
+            } else {
+                alert('Username atau password salah!');
+            }
+        }
+
+        function logoutAdmin() {
+            if (confirm('Apakah Anda yakin ingin logout?')) {
+                isAdminLoggedIn = false;
+                localStorage.setItem('ketua_umum_admin_logged_in', 'false');
+                updateAdminUI();
+                showSection('voting');
+                alert('Logout berhasil!');
+            }
+        }
+
+        function updateAdminUI() {
+            const adminButtons = ['admin-candidates-btn', 'admin-classes-btn', 'admin-timer-btn', 'admin-results-btn'];
+            
+            if (isAdminLoggedIn) {
+                adminButtons.forEach(id => {
+                    document.getElementById(id).classList.remove('hidden');
+                });
+                document.getElementById('admin-status').classList.remove('hidden');
+                document.getElementById('admin-login-btn').classList.add('hidden');
+                document.getElementById('admin-logout-btn').classList.remove('hidden');
+            } else {
+                adminButtons.forEach(id => {
+                    document.getElementById(id).classList.add('hidden');
+                });
+                document.getElementById('admin-status').classList.add('hidden');
+                document.getElementById('admin-login-btn').classList.remove('hidden');
+                document.getElementById('admin-logout-btn').classList.add('hidden');
+            }
+        }
+
+        // Navigation
+        function showSection(sectionName) {
+            // Check admin access for restricted sections
+            const adminSections = ['candidates', 'classes', 'timer', 'results'];
+            if (adminSections.includes(sectionName) && !isAdminLoggedIn) {
+                alert('Akses ditolak! Silakan login sebagai admin terlebih dahulu.');
+                return;
+            }
+
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionName + '-section').classList.remove('hidden');
+            
+            // Update navigation buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600');
+                btn.classList.add('bg-gray-600');
+            });
+            event.target.classList.remove('bg-gray-600');
+            event.target.classList.add('bg-blue-600');
+
+            // Load section-specific data
+            if (sectionName === 'candidates') loadCandidatesManagement();
+            if (sectionName === 'classes') loadClassesManagement();
+            if (sectionName === 'timer') loadTimerStatus();
+            if (sectionName === 'results') loadResults();
+            if (sectionName === 'voting') loadVotingInterface();
+        }
+
+        // Timer Functions
+        let countdownInterval;
+
+        // Helper: convert Date -> local input value (YYYY-MM-DDTHH:MM)
+        function toLocalInputValue(date) {
+            const pad = (n) => n.toString().padStart(2, '0');
+            const year = date.getFullYear();
+            const month = pad(date.getMonth() + 1);
+            const day = pad(date.getDate());
+            const hours = pad(date.getHours());
+            const minutes = pad(date.getMinutes());
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+
+        function updateCountdown() {
+            if (!votingTime.start || !votingTime.end) {
+                document.getElementById('countdown-display').textContent = 'Voting Belum Diatur';
+                return;
+            }
+
+            const now = new Date().getTime();
+            const start = new Date(votingTime.start).getTime();
+            const end = new Date(votingTime.end).getTime();
+
+            if (now < start) {
+                const distance = start - now;
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                document.getElementById('countdown-display').innerHTML =
+                    `Voting dimulai dalam:<br><span class="font-semibold">${days} hari ${hours} jam ${minutes} menit ${seconds} detik</span>`;
+            } else if (now >= start && now <= end) {
+                const distance = end - now;
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                document.getElementById('countdown-display').innerHTML =
+                    `<span class="pulse-animation">🔴 VOTING AKTIF</span><br><span class="font-semibold">${days} hari ${hours} jam ${minutes} menit ${seconds} detik</span>`;
+            } else {
+                document.getElementById('countdown-display').textContent = 'Voting Telah Berakhir';
+            }
+        }
+
+        function setVotingTime() {
+            const start = document.getElementById('start-time').value;
+            const end = document.getElementById('end-time').value;
+            
+            if (!start || !end) {
+                alert('Mohon isi waktu mulai dan selesai');
+                return;
+            }
+            
+            if (new Date(start) >= new Date(end)) {
+                alert('Waktu mulai harus lebih awal dari waktu selesai');
+                return;
+            }
+            
+            votingTime = { start, end };
+            localStorage.setItem('ketua_umum_voting_time', JSON.stringify(votingTime));
+            loadTimerStatus();
+            alert('Waktu voting berhasil diatur!');
+        }
+
+        function startVotingNow() {
+            // Use local datetime format matching input[type=datetime-local]
+            const now = new Date();
+            const endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
+
+            votingTime = {
+                start: toLocalInputValue(now),
+                end: toLocalInputValue(endDate)
+            };
+            localStorage.setItem('ketua_umum_voting_time', JSON.stringify(votingTime));
+            loadTimerStatus();
+            updateCountdown();
+            alert('Voting dimulai sekarang dan akan berakhir dalam 24 jam!');
+        }
+
+        function stopVoting() {
+            if (confirm('Apakah Anda yakin ingin menghentikan voting?')) {
+                // Save local end time so parsing is consistent with other values
+                votingTime.end = toLocalInputValue(new Date());
+                localStorage.setItem('ketua_umum_voting_time', JSON.stringify(votingTime));
+                loadTimerStatus();
+                updateCountdown();
+                alert('Voting telah dihentikan!');
+            }
+        }
+
+        function loadTimerStatus() {
+            if (votingTime.start && votingTime.end) {
+                document.getElementById('start-display').textContent = 
+                    new Date(votingTime.start).toLocaleString('id-ID');
+                document.getElementById('end-display').textContent = 
+                    new Date(votingTime.end).toLocaleString('id-ID');
+                
+                const now = new Date().getTime();
+                const start = new Date(votingTime.start).getTime();
+                const end = new Date(votingTime.end).getTime();
+                
+                if (now < start) {
+                    document.getElementById('voting-status').textContent = 'Belum Dimulai';
+                } else if (now >= start && now <= end) {
+                    document.getElementById('voting-status').textContent = 'Sedang Berlangsung';
+                } else {
+                    document.getElementById('voting-status').textContent = 'Telah Berakhir';
+                }
+            }
+        }
+
+        function isVotingActive() {
+            if (!votingTime.start || !votingTime.end) return false;
+            
+            const now = new Date().getTime();
+            const start = new Date(votingTime.start).getTime();
+            const end = new Date(votingTime.end).getTime();
+            
+            return now >= start && now <= end;
+        }
+
+        // Voter Functions
+        function loginVoter() {
+            const selectedClass = document.getElementById('voter-class').value.trim();
+            const voterName = document.getElementById('voter-name').value.trim();
+            
+            if (!selectedClass || !voterName) {
+                alert('Mohon pilih kelas dan masukkan nama Anda');
+                return;
+            }
+            
+            if (!isVotingActive()) {
+                alert('Voting sedang tidak aktif. Silakan coba lagi nanti.');
+                return;
+            }
+            
+            // Create unique voter ID based on class and name
+            const voterId = selectedClass + '_' + voterName.replace(/\s+/g, '_').toLowerCase();
+            
+            // Check if already voted
+            if (votes[voterId]) {
+                const votedCandidate = candidates.find(c => c.id === votes[voterId]);
+                document.getElementById('voted-candidate').textContent = votedCandidate ? votedCandidate.name : 'Tidak diketahui';
+                document.getElementById('voter-login').classList.add('hidden');
+                document.getElementById('voting-interface').classList.add('hidden');
+                document.getElementById('already-voted').classList.remove('hidden');
+                return;
+            }
+            
+            // Create temporary voter object
+            currentVoter = {
+                id: voterId,
+                name: voterName,
+                class: selectedClass,
+                hasVoted: false
+            };
+            
+            document.getElementById('voter-name').textContent = voterName;
+            document.getElementById('voter-login').classList.add('hidden');
+            document.getElementById('voting-interface').classList.remove('hidden');
+            document.getElementById('already-voted').classList.add('hidden');
+            loadCandidatesForVoting();
+        }
+
+        function loadCandidatesForVoting() {
+            const container = document.getElementById('candidates-list');
+            container.innerHTML = '';
+            
+            candidates.forEach(candidate => {
+                const candidateCard = document.createElement('div');
+                candidateCard.className = 'bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-blue-500 transition-colors cursor-pointer';
+                candidateCard.onclick = () => vote(candidate.id);
+                
+                candidateCard.innerHTML = `
+                    <div class="text-center mb-4">
+                        ${candidate.photo ? 
+                            `<img src="${candidate.photo}" alt="${candidate.name}" class="w-24 h-24 rounded-full mx-auto mb-3 object-cover border-4 border-blue-200">` :
+                            `<div class="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-3 flex items-center justify-center text-white text-2xl font-bold">
+                                ${candidate.name.charAt(0)}
+                            </div>`
+                        }
+                        <h3 class="text-xl font-bold text-gray-800">${candidate.name}</h3>
+                        <p class="text-gray-600">${candidate.class}</p>
+                    </div>
+                    <div class="mb-4">
+                        <h4 class="font-semibold text-gray-800 mb-2">Visi:</h4>
+                        <p class="text-sm text-gray-600">${candidate.vision}</p>
+                    </div>
+                    <div class="mb-4">
+                        <h4 class="font-semibold text-gray-800 mb-2">Misi:</h4>
+                        <ul class="text-sm text-gray-600 space-y-1">
+                            ${candidate.mission.map(m => `<li>• ${m}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div class="mb-4">
+                        <h4 class="font-semibold text-gray-800 mb-2">Program Kerja:</h4>
+                        <ul class="text-sm text-gray-600 space-y-1">
+                            ${candidate.programs.map(p => `<li>• ${p}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <button class="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                        Pilih Calon Ini
+                    </button>
+                `;
+                
+                container.appendChild(candidateCard);
+            });
+        }
+
+        function vote(candidateId) {
+            if (!currentVoter || !isVotingActive()) {
+                alert('Voting tidak dapat dilakukan saat ini');
+                return;
+            }
+            
+            const candidate = candidates.find(c => c.id === candidateId);
+            if (!candidate) return;
+            
+            if (confirm(`Apakah Anda yakin memilih ${candidate.name}? Pilihan tidak dapat diubah.`)) {
+                // Record vote with voter ID
+                votes[currentVoter.id] = candidateId;
+                localStorage.setItem('ketua_umum_votes', JSON.stringify(votes));
+                
+                // Update class voted count
+                const classData = classes.find(c => c.name === currentVoter.class);
+                if (classData) {
+                    classData.votedCount++;
+                    localStorage.setItem('ketua_umum_classes', JSON.stringify(classes));
+                }
+                
+                // Show success message
+                document.getElementById('voted-candidate').textContent = candidate.name;
+                document.getElementById('voting-interface').classList.add('hidden');
+                document.getElementById('already-voted').classList.remove('hidden');
+                
+                alert('Terima kasih! Suara Anda telah berhasil dicatat.');
+            }
+        }
+
+        // Candidate Management
+        function addCandidate() {
+            const name = document.getElementById('candidate-name').value.trim();
+            const candidateClass = document.getElementById('candidate-class').value.trim();
+            const photoFile = document.getElementById('candidate-photo').files[0];
+            const vision = document.getElementById('candidate-vision').value.trim();
+            const mission = document.getElementById('candidate-mission').value.trim();
+            const programs = document.getElementById('candidate-programs').value.trim();
+            
+            if (!name || !candidateClass || !vision || !mission || !programs) {
+                alert('Mohon lengkapi semua data calon');
+                return;
+            }
+            
+            // Handle photo upload
+            if (photoFile) {
+                if (photoFile.size > 2 * 1024 * 1024) { // 2MB limit
+                    alert('Ukuran foto terlalu besar. Maksimal 2MB.');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const newCandidate = {
+                        id: Date.now(),
+                        name,
+                        class: candidateClass,
+                        photo: e.target.result,
+                        vision,
+                        mission: mission.split('\n').filter(m => m.trim()),
+                        programs: programs.split('\n').filter(p => p.trim())
+                    };
+                    
+                    candidates.push(newCandidate);
+                    localStorage.setItem('ketua_umum_candidates', JSON.stringify(candidates));
+                    
+                    // Clear form
+                    clearCandidateForm();
+                    loadCandidatesManagement();
+                    alert('Calon berhasil ditambahkan!');
+                };
+                reader.readAsDataURL(photoFile);
+            } else {
+                const newCandidate = {
+                    id: Date.now(),
+                    name,
+                    class: candidateClass,
+                    photo: null,
+                    vision,
+                    mission: mission.split('\n').filter(m => m.trim()),
+                    programs: programs.split('\n').filter(p => p.trim())
+                };
+                
+                candidates.push(newCandidate);
+                localStorage.setItem('ketua_umum_candidates', JSON.stringify(candidates));
+                
+                // Clear form
+                clearCandidateForm();
+                loadCandidatesManagement();
+                alert('Calon berhasil ditambahkan!');
+            }
+        }
+
+        function clearCandidateForm() {
+            document.getElementById('candidate-name').value = '';
+            document.getElementById('candidate-class').value = '';
+            document.getElementById('candidate-photo').value = '';
+            document.getElementById('candidate-vision').value = '';
+            document.getElementById('candidate-mission').value = '';
+            document.getElementById('candidate-programs').value = '';
+        }
+
+        function loadCandidatesManagement() {
+            const container = document.getElementById('candidates-management-list');
+            container.innerHTML = '';
+            
+            if (candidates.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada calon ketua umum Asrama yang terdaftar</p>';
+                return;
+            }
+            
+            candidates.forEach(candidate => {
+                const candidateDiv = document.createElement('div');
+                candidateDiv.className = 'bg-gray-50 rounded-lg p-6 mb-4';
+                candidateDiv.innerHTML = `
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <div class="flex-shrink-0">
+                            ${candidate.photo ? 
+                                `<img src="${candidate.photo}" alt="${candidate.name}" class="w-24 h-24 rounded-lg object-cover border-2 border-gray-300">` :
+                                `<div class="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-2xl font-bold">
+                                    ${candidate.name.charAt(0)}
+                                </div>`
+                            }
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-bold text-gray-800">${candidate.name}</h3>
+                                    <p class="text-gray-600 mb-3">${candidate.class}</p>
+                                    <p class="text-sm text-gray-700 mb-3"><strong>Visi:</strong> ${candidate.vision}</p>
+                                    <div class="text-sm text-gray-700 mb-3">
+                                        <strong>Misi:</strong>
+                                        <ul class="mt-1 space-y-1">
+                                            ${candidate.mission.map(m => `<li>• ${m}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                    <div class="text-sm text-gray-700">
+                                        <strong>Program Kerja:</strong>
+                                        <ul class="mt-1 space-y-1">
+                                            ${candidate.programs.map(p => `<li>• ${p}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                </div>
+                                <button onclick="removeCandidate(${candidate.id})" 
+                                        class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                                    Hapus
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(candidateDiv);
+            });
+        }
+
+        function removeCandidate(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus calon ini?')) {
+                candidates = candidates.filter(c => c.id !== id);
+                localStorage.setItem('ketua_umum_candidates', JSON.stringify(candidates));
+                loadCandidatesManagement();
+            }
+        }
+
+        // Classes Management
+        function addClass() {
+            const className = document.getElementById('class-name').value.trim();
+            const studentCount = parseInt(document.getElementById('class-count').value);
+            
+            if (!className || !studentCount || studentCount < 1) {
+                alert('Mohon lengkapi nama angkatan dan jumlah penghuni per angkatan yang valid');
+                return;
+            }
+            
+            if (classes.find(c => c.name === className)) {
+                alert('Angkatan sudah terdaftar');
+                return;
+            }
+            
+            classes.push({ name: className, studentCount: studentCount, votedCount: 0 });
+            localStorage.setItem('ketua_umum_classes', JSON.stringify(classes));
+            
+            // Clear form
+            document.getElementById('class-name').value = '';
+            document.getElementById('class-count').value = '';
+            
+            loadClassesManagement();
+            alert('Angkatan berhasil ditambahkan!');
+        }
+
+        function addBulkClasses() {
+            const bulkData = document.getElementById('bulk-classes').value.trim();
+            if (!bulkData) {
+                alert('Mohon masukkan data angkatan');
+                return;
+            }
+            
+            const lines = bulkData.split('\n');
+            let added = 0;
+            let errors = [];
+            
+            lines.forEach((line, index) => {
+                const parts = line.trim().split(',');
+                if (parts.length !== 2) {
+                    errors.push(`Baris ${index + 1}: Format tidak valid`);
+                    return;
+                }
+                
+                const [className, studentCountStr] = parts.map(p => p.trim());
+                const studentCount = parseInt(studentCountStr);
+                
+                if (!className || !studentCount || studentCount < 1) {
+                    errors.push(`Baris ${index + 1}: Data tidak valid`);
+                    return;
+                }
+                
+                if (classes.find(c => c.name === className)) {
+                    errors.push(`Baris ${index + 1}: Angkatan ${className} sudah terdaftar`);
+                    return;
+                }
+                
+                classes.push({ name: className, studentCount: studentCount, votedCount: 0 });
+                added++;
+            });
+
+            localStorage.setItem('ketua_umum_classes', JSON.stringify(classes));
+            document.getElementById('bulk-classes').value = '';
+            loadClassesManagement();
+
+            let message = `${added} angkatan berhasil ditambahkan`;
+            if (errors.length > 0) {
+                message += `\n\nError:\n${errors.join('\n')}`;
+            }
+            alert(message);
+        }
+
+        function loadClassesManagement() {
+            const container = document.getElementById('classes-list');
+            container.innerHTML = '';
+            
+            if (classes.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center py-8 text-gray-500">Belum ada angkatan yang terdaftar</div>';
+                return;
+            }
+            
+            classes.forEach(classData => {
+                const classCard = document.createElement('div');
+                classCard.className = 'bg-white border rounded-lg p-6 card-shadow';
+                
+                const participationRate = classData.studentCount > 0 ? Math.round((classData.votedCount / classData.studentCount) * 100) : 0;
+                
+                classCard.innerHTML = `
+                    <div class="text-center mb-4">
+                        <h3 class="text-lg font-bold text-gray-800">${classData.name}</h3>
+                        <div class="mt-2 text-3xl font-bold text-blue-600">${classData.studentCount}</div>
+                        <div class="text-sm text-gray-600">Total Siswa</div>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Sudah Voting:</span>
+                            <span class="font-medium text-green-600">${classData.votedCount}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Belum Voting:</span>
+                            <span class="font-medium text-orange-600">${classData.studentCount - classData.votedCount}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Partisipasi:</span>
+                            <span class="font-medium text-purple-600">${participationRate}%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <div class="bg-gray-200 rounded-full h-2">
+                            <div class="bg-green-500 h-2 rounded-full transition-all duration-500" 
+                                 style="width: ${participationRate}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 flex space-x-2">
+                        <button onclick="editClass('${classData.name}')" 
+                                class="flex-1 bg-blue-600 text-white py-2 px-3 rounded text-sm hover:bg-blue-700 transition-colors">
+                            Edit
+                        </button>
+                        <button onclick="removeClass('${classData.name}')" 
+                                class="flex-1 bg-red-600 text-white py-2 px-3 rounded text-sm hover:bg-red-700 transition-colors">
+                            Hapus
+                        </button>
+                    </div>
+                `;
+                
+                container.appendChild(classCard);
+            });
+            
+            // Update summary
+            updateClassesSummary();
+        }
+
+        function updateClassesSummary() {
+            const totalClasses = classes.length;
+            const totalStudents = classes.reduce((sum, c) => sum + c.studentCount, 0);
+            const votedStudents = classes.reduce((sum, c) => sum + c.votedCount, 0);
+            
+            document.getElementById('total-classes').textContent = totalClasses;
+            document.getElementById('total-students').textContent = totalStudents;
+            document.getElementById('voted-students').textContent = votedStudents;
+        }
+
+        function editClass(className) {
+            const classData = classes.find(c => c.name === className);
+            if (!classData) return;
+            
+            const newCount = prompt(`Edit jumlah penghuni per angkatan ${className}:`, classData.studentCount);
+            if (newCount === null) return;
+            
+            const count = parseInt(newCount);
+            if (isNaN(count) || count < 1) {
+                alert('Jumlah angkatan harus berupa angka positif');
+                return;
+            }
+            
+            if (count < classData.votedCount) {
+                alert(`Jumlah angkatan tidak boleh kurang dari yang sudah voting (${classData.votedCount})`);
+                return;
+            }
+            
+            classData.studentCount = count;
+            localStorage.setItem('ketua_umum_classes', JSON.stringify(classes));
+            loadClassesManagement();
+            alert('Data angkatan berhasil diupdate!');
+        }
+
+        function removeClass(className) {
+            if (confirm(`Apakah Anda yakin ingin menghapus angkatan ${className}?`)) {
+                classes = classes.filter(c => c.name !== className);
+                localStorage.setItem('ketua_umum_classes', JSON.stringify(classes));
+                loadClassesManagement();
+                alert('Angkatan berhasil dihapus!');
+            }
+        }
+
+        // Results
+        function loadResults() {
+            const totalVotes = Object.keys(votes).length;
+            const totalStudents = classes.reduce((sum, c) => sum + c.studentCount, 0);
+            const participationRate = totalStudents > 0 ? Math.round((totalVotes / totalStudents) * 100) : 0;
+            
+            document.getElementById('total-votes').textContent = totalVotes;
+            document.getElementById('total-voters').textContent = totalStudents;
+            document.getElementById('participation-rate').textContent = participationRate + '%';
+            
+            // Calculate votes per candidate
+            const candidateVotes = {};
+            candidates.forEach(candidate => {
+                candidateVotes[candidate.id] = 0;
+            });
+            
+            Object.values(votes).forEach(candidateId => {
+                if (candidateVotes[candidateId] !== undefined) {
+                    candidateVotes[candidateId]++;
+                }
+            });
+            
+            // Sort candidates by votes
+            const sortedResults = candidates
+                .map(candidate => ({
+                    ...candidate,
+                    votes: candidateVotes[candidate.id],
+                    percentage: totalVotes > 0 ? Math.round((candidateVotes[candidate.id] / totalVotes) * 100) : 0
+                }))
+                .sort((a, b) => b.votes - a.votes);
+            
+            // Display results
+            const container = document.getElementById('results-chart');
+            container.innerHTML = '';
+            
+            if (sortedResults.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data hasil</p>';
+                return;
+            }
+            
+            sortedResults.forEach((candidate, index) => {
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'bg-white border rounded-lg p-6';
+                resultDiv.innerHTML = `
+                    <div class="flex flex-col md:flex-row md:items-center gap-4">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="text-2xl font-bold ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : index === 2 ? 'text-orange-500' : 'text-gray-600'}">
+                                ${index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-800">${candidate.name}</h3>
+                                <p class="text-gray-600">${candidate.class}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold text-blue-600">${candidate.votes}</div>
+                            <div class="text-sm text-gray-600">${candidate.percentage}% suara</div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="bg-gray-200 rounded-full h-3">
+                            <div class="bg-blue-600 h-3 rounded-full transition-all duration-500" 
+                                 style="width: ${candidate.percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(resultDiv);
+            });
+        }
+
+        function exportResults() {
+            const totalVotes = Object.keys(votes).length;
+            const candidateVotes = {};
+            candidates.forEach(candidate => {
+                candidateVotes[candidate.id] = 0;
+            });
+            
+            Object.values(votes).forEach(candidateId => {
+                if (candidateVotes[candidateId] !== undefined) {
+                    candidateVotes[candidateId]++;
+                }
+            });
+
+            let csv = 'Nama Calon,Program Studi/Fakultas,Jumlah Suara,Persentase\n';
+            candidates.forEach(candidate => {
+                const votes = candidateVotes[candidate.id];
+                const percentage = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+                csv += `"${candidate.name}","${candidate.class}",${votes},${percentage}%\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'hasil_voting_ketua_umum_asrama_2025.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function loadVotingInterface() {
+            // Reset voting interface
+            document.getElementById('voter-login').classList.remove('hidden');
+            document.getElementById('voting-interface').classList.add('hidden');
+            document.getElementById('already-voted').classList.add('hidden');
+            document.getElementById('voter-class').value = '';
+            document.getElementById('voter-name').value = '';
+            currentVoter = null;
+            
+            // Load class options
+            loadClassOptions();
+        }
+
+        function loadClassOptions() {
+            const classSelect = document.getElementById('voter-class');
+            classSelect.innerHTML = '<option value="">Pilih Angkatan Anda</option>';
+            
+            // Get classes from classes data
+            const sortedClasses = classes.map(c => c.name).sort();
+            
+            sortedClasses.forEach(className => {
+                const option = document.createElement('option');
+                option.value = className;
+                option.textContent = className;
+                classSelect.appendChild(option);
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Start countdown
+            countdownInterval = setInterval(updateCountdown, 1000);
+            updateCountdown();
+            
+            // Load initial data
+            loadTimerStatus();
+            updateAdminUI();
+            
+            // Show voting section by default
+            showSection('voting');
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96c486bc54d9df9b',t:'MTc1NDcxMzkxMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
